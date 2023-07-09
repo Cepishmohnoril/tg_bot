@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/PaulSonOfLars/gotgbot/v2"
@@ -39,10 +40,8 @@ func main() {
 		panic("failed to create new bot: " + err.Error())
 	}
 
-	// Create updater and dispatcher.
 	updater := ext.NewUpdater(&ext.UpdaterOpts{
 		Dispatcher: ext.NewDispatcher(&ext.DispatcherOpts{
-			// If an error is returned by a handler, log it and continue going.
 			Error: func(b *gotgbot.Bot, ctx *ext.Context, err error) ext.DispatcherAction {
 				log.Println("an error occurred while handling update:", err.Error())
 				return ext.DispatcherActionNoop
@@ -51,10 +50,7 @@ func main() {
 		}),
 	})
 	dispatcher := updater.Dispatcher
-
-	// Add echo handler to reply to all text messages.
-	//dispatcher.AddHandler(handlers.NewMessage(message.Text, echo))
-	dispatcher.AddHandler(handlers.NewMessage(message.Text, echo))
+	dispatcher.AddHandler(handlers.NewMessage(message.Text, forward))
 
 	// Start receiving updates.
 	err = updater.StartPolling(b, &ext.PollingOpts{
@@ -73,13 +69,14 @@ func main() {
 
 	// Idle, to keep updates coming in, and avoid bot stopping.
 	updater.Idle()
-	fmt.Printf("doot", dispatcher)
-
 }
 
-// echo replies to a messages with its own contents.
-func echo(b *gotgbot.Bot, ctx *ext.Context) error {
-	_, err := ctx.EffectiveMessage.Reply(b, ctx.EffectiveMessage.Text, nil)
+func forward(b *gotgbot.Bot, ctx *ext.Context) error {
+	chatIdStr, _ := os.LookupEnv("OUTPUT_CHAT_ID")
+	outChatId, _ := strconv.ParseInt(chatIdStr, 10, 64)
+
+	_, err := b.ForwardMessage(outChatId, ctx.EffectiveChat.Id, ctx.Message.MessageId, nil)
+
 	if err != nil {
 		return fmt.Errorf("failed to echo message: %w", err)
 	}
