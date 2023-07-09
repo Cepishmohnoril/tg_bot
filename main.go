@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/PaulSonOfLars/gotgbot/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers"
 	"github.com/PaulSonOfLars/gotgbot/v2/ext/handlers/filters/message"
 	"github.com/joho/godotenv"
 )
@@ -23,7 +23,7 @@ func init() {
 func main() {
 	token, tokenExists := os.LookupEnv("TOKEN")
 
-	if tokenExists {
+	if !tokenExists || token == "" {
 		panic("Telegram API token is absent.")
 	}
 
@@ -53,6 +53,7 @@ func main() {
 	dispatcher := updater.Dispatcher
 
 	// Add echo handler to reply to all text messages.
+	//dispatcher.AddHandler(handlers.NewMessage(message.Text, echo))
 	dispatcher.AddHandler(handlers.NewMessage(message.Text, echo))
 
 	// Start receiving updates.
