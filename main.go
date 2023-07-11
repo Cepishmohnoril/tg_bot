@@ -11,10 +11,13 @@ import (
 
 var (
 	// Universal markup builders.
-	menu = &telebot.ReplyMarkup{ResizeKeyboard: true}
+	menu = &telebot.ReplyMarkup{ResizeKeyboard: true, ForceReply: true}
 
 	// Reply buttons.
-	btnSendVid = menu.Text("Надіслати відео і опис")
+	btnSendVid  = menu.Text("Надіслати відео і опис")
+	btnSendImg  = menu.Text("Надіслати фото і опис")
+	btnComplain = menu.Text("Поскаржитися на контент")
+	btnRequest  = menu.Text("Що цікаво знати більше про війну?")
 )
 
 func init() {
@@ -44,10 +47,13 @@ func main() {
 	initMenu()
 
 	b.Handle("/start", func(c telebot.Context) error {
-		return c.Send("Hello!", menu)
+		return c.Send("Вітаю!", menu)
 	})
 
-	b.Handle(&btnSendVid, sendVid)
+	b.Handle(&btnSendVid, getVid)
+	b.Handle(&btnSendImg, sendImg)
+	b.Handle(&btnComplain, sendComplain)
+	b.Handle(&btnRequest, sendContentRequest)
 
 	b.Start()
 
@@ -56,9 +62,8 @@ func main() {
 func initMenu() {
 	menu.Reply(
 		menu.Row(btnSendVid),
+		menu.Row(btnSendImg),
+		menu.Row(btnComplain),
+		menu.Row(btnRequest),
 	)
-}
-
-func sendVid(c telebot.Context) error {
-	return c.Send("Відео надіслано")
 }
