@@ -9,6 +9,7 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
+var b *telebot.Bot
 var (
 	// Universal markup builders.
 	menu = &telebot.ReplyMarkup{ResizeKeyboard: true, ForceReply: true}
@@ -37,12 +38,7 @@ func main() {
 		Token:  token,
 		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
 	}
-
-	b, err := telebot.NewBot(pref)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	b, _ = telebot.NewBot(pref)
 
 	initMenu()
 
@@ -54,6 +50,10 @@ func main() {
 	b.Handle(&btnSendImg, sendImg)
 	b.Handle(&btnComplain, sendComplain)
 	b.Handle(&btnRequest, sendContentRequest)
+
+	b.Handle(telebot.OnText, handleText, checkSession)
+	b.Handle(telebot.OnVideo, handleVid, checkSession)
+	b.Handle(telebot.OnPhoto, handleImg, checkSession)
 
 	b.Start()
 
