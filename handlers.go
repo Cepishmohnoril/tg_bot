@@ -101,6 +101,7 @@ func handleImg(c telebot.Context) error {
 func sendTextToAdmin(text string) {
 	recipient := getAdminRecipient()
 	b.Send(recipient, text)
+
 }
 
 func forwardSessionDataToAdmin(data []int, chatId int64) {

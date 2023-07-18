@@ -45,24 +45,24 @@ func main() {
 
 	b.Handle("/start", func(c telebot.Context) error {
 		return c.Send("Вітаю!", menu)
-	})
+	}, checkIsAdminChat)
 
 	b.Handle(&btnSendVid, func(c telebot.Context) error {
 		return buttonHandler(c, "video", "Додайте відео.")
-	})
+	}, checkIsAdminChat)
 	b.Handle(&btnSendImg, func(c telebot.Context) error {
 		return buttonHandler(c, "image", "Додайте зображення.")
-	})
+	}, checkIsAdminChat)
 	b.Handle(&btnComplain, func(c telebot.Context) error {
 		return buttonHandler(c, "complain", "Додайте скаргу.")
-	})
+	}, checkIsAdminChat)
 	b.Handle(&btnRequest, func(c telebot.Context) error {
 		return buttonHandler(c, "suggestion", "Додайте ваше побажання.")
-	})
+	}, checkIsAdminChat)
 
-	b.Handle(telebot.OnText, handleText, checkSession)
-	b.Handle(telebot.OnVideo, handleVid, checkSession)
-	b.Handle(telebot.OnPhoto, handleImg, checkSession)
+	b.Handle(telebot.OnText, handleText, checkIsAdminChat, checkSession)
+	b.Handle(telebot.OnVideo, handleVid, checkIsAdminChat, checkSession)
+	b.Handle(telebot.OnPhoto, handleImg, checkIsAdminChat, checkSession)
 
 	b.Start()
 
