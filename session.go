@@ -1,18 +1,42 @@
 package main
 
+import "time"
+
 type session struct {
-	nextStep string
-	data     []int
+	nextStep  string
+	data      []int
+	createdAt time.Time
 }
 
 func NewSession() session {
-	return session{}
+	return session{
+		createdAt: time.Now(),
+	}
 }
 
 var storage map[int64]session
 
 func initSessionStorage() {
 	storage = make(map[int64]session)
+
+	go cleanerLoop()
+}
+
+func cleanerLoop() {
+	for {
+		time.Sleep(10 * time.Minute)
+		cleanStorage()
+	}
+}
+
+func cleanStorage() {
+	for id, session := range storage {
+		diff := time.Since(session.createdAt)
+
+		if diff.Minutes() >= 10 {
+			delete(storage, id)
+		}
+	}
 }
 
 func setSession(sesId int64, ses session) {
