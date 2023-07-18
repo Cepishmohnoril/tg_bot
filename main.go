@@ -9,8 +9,8 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-var b *telebot.Bot
 var (
+	b *telebot.Bot
 	// Universal markup builders.
 	menu = &telebot.ReplyMarkup{ResizeKeyboard: true, ForceReply: true}
 
@@ -28,6 +28,7 @@ func init() {
 }
 
 func main() {
+	initSessionStorage()
 	token, tokenExists := os.LookupEnv("TOKEN")
 
 	if !tokenExists || token == "" {
@@ -46,10 +47,18 @@ func main() {
 		return c.Send("Вітаю!", menu)
 	})
 
-	b.Handle(&btnSendVid, getVid)
-	b.Handle(&btnSendImg, sendImg)
-	b.Handle(&btnComplain, sendComplain)
-	b.Handle(&btnRequest, sendContentRequest)
+	b.Handle(&btnSendVid, func(c telebot.Context) error {
+		return buttonHandler(c, "video", "Додайте відео.")
+	})
+	b.Handle(&btnSendImg, func(c telebot.Context) error {
+		return buttonHandler(c, "image", "Додайте зображення.")
+	})
+	b.Handle(&btnComplain, func(c telebot.Context) error {
+		return buttonHandler(c, "complain", "Додайте скаргу.")
+	})
+	b.Handle(&btnRequest, func(c telebot.Context) error {
+		return buttonHandler(c, "suggestion", "Додайте ваше побажання.")
+	})
 
 	b.Handle(telebot.OnText, handleText, checkSession)
 	b.Handle(telebot.OnVideo, handleVid, checkSession)

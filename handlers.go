@@ -24,38 +24,41 @@ func (r AdminChat) Recipient() string {
 	return r.chatId
 }
 
-func getVid(c telebot.Context) error {
-	session := createSession(c.Chat().ID)
+func buttonHandler(c telebot.Context, nStep string, msg string) error {
+	session := NewSession()
+	session.setNextStep(nStep)
+	setSession(c.Chat().ID, session)
 
-	session.setType("video")
-	session.setNextStep("video")
-
-	return c.Send("Додайте відео і надайте короткий опис.")
-}
-
-func sendImg(c telebot.Context) error {
-	return nil
-}
-
-func sendComplain(c telebot.Context) error {
-	return nil
-}
-
-func sendContentRequest(c telebot.Context) error {
-	return nil
+	return c.Send(msg)
 }
 
 func handleText(c telebot.Context) error {
-	session := getSession(c.Chat().ID)
+	var (
+		sesId   = c.Chat().ID
+		session = getSession(sesId)
+	)
 
 	switch session.nextStep {
 	case "description":
 		session.addData(c.Message().ID)
 		session.setNextStep("date")
+		setSession(sesId, session)
 		return c.Send("Додайте дату коли було зроблено фото/відео.")
 	case "date":
 		session.addData(c.Message().ID)
-		sendToAdmin(session.data, c.Chat().ID)
+		forwardSessionDataToAdmin(session.data, c.Chat().ID)
+		terminateSession(c.Chat().ID)
+		return c.Send("Данні відправлено.")
+	case "complain":
+		session.addData(c.Message().ID)
+		sendTextToAdmin("Скарга!")
+		forwardSessionDataToAdmin(session.data, c.Chat().ID)
+		terminateSession(c.Chat().ID)
+		return c.Send("Данні відправлено.")
+	case "suggestion":
+		session.addData(c.Message().ID)
+		sendTextToAdmin("Побажання.")
+		forwardSessionDataToAdmin(session.data, c.Chat().ID)
 		terminateSession(c.Chat().ID)
 		return c.Send("Данні відправлено.")
 	}
@@ -64,27 +67,44 @@ func handleText(c telebot.Context) error {
 }
 
 func handleVid(c telebot.Context) error {
-	session := getSession(c.Chat().ID)
+	var (
+		sesId   = c.Chat().ID
+		session = getSession(sesId)
+	)
 
 	if session.nextStep == "video" {
 		session.addData(c.Message().ID)
 		session.setNextStep("description")
-		return c.Send("Додайте відео і надайте короткий опис.")
+		setSession(sesId, session)
+		return c.Send("Надайте короткий опис.")
 	}
 
 	return nil
 }
 
 func handleImg(c telebot.Context) error {
+	var (
+		sesId   = c.Chat().ID
+		session = getSession(sesId)
+	)
+
+	if session.nextStep == "image" {
+		session.addData(c.Message().ID)
+		session.setNextStep("description")
+		setSession(sesId, session)
+		return c.Send("Надайте короткий опис.")
+	}
+
 	return nil
 }
 
-func sendToAdmin(data []int, chatId int64) {
-	admChatId, _ := os.LookupEnv("OUTPUT_CHAT_ID")
+func sendTextToAdmin(text string) {
+	recipient := getAdminRecipient()
+	b.Send(recipient, text)
+}
 
-	recipient := AdminChat{
-		chatId: admChatId,
-	}
+func forwardSessionDataToAdmin(data []int, chatId int64) {
+	recipient := getAdminRecipient()
 
 	for _, msgId := range data {
 		admMsg := AdminMsg{
@@ -93,5 +113,13 @@ func sendToAdmin(data []int, chatId int64) {
 		}
 
 		b.Copy(recipient, admMsg)
+	}
+}
+
+func getAdminRecipient() telebot.Recipient {
+	admChatId, _ := os.LookupEnv("OUTPUT_CHAT_ID")
+
+	return AdminChat{
+		chatId: admChatId,
 	}
 }

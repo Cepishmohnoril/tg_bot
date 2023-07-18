@@ -1,17 +1,22 @@
 package main
 
 type session struct {
-	sesType  string
 	nextStep string
 	data     []int
 }
 
+func NewSession() session {
+	return session{}
+}
+
 var storage map[int64]session
 
-func createSession(sesId int64) session {
-	storage[sesId] = session{}
+func initSessionStorage() {
+	storage = make(map[int64]session)
+}
 
-	return storage[sesId]
+func setSession(sesId int64, ses session) {
+	storage[sesId] = ses
 }
 
 func getSession(sesId int64) session {
@@ -26,10 +31,6 @@ func sessionExists(sesId int64) bool {
 	_, ok := storage[sesId]
 
 	return ok
-}
-
-func (s *session) setType(sesType string) {
-	s.sesType = sesType
 }
 
 func (s *session) setNextStep(nextStep string) {
