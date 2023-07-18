@@ -1,6 +1,8 @@
 package main
 
-import "time"
+import (
+	"time"
+)
 
 type session struct {
 	nextStep  string
@@ -30,6 +32,7 @@ func cleanerLoop() {
 }
 
 func cleanStorage() {
+
 	for id, session := range storage {
 		diff := time.Since(session.createdAt)
 

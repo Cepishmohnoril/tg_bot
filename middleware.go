@@ -13,6 +13,6 @@ func checkSession(next telebot.HandlerFunc) telebot.HandlerFunc {
 			return next(c)
 		}
 
-		return c.Respond()
+		return c.Send("Оберіть дію.")
 	}
 }
