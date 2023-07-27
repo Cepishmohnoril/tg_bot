@@ -15,10 +15,9 @@ var (
 	menu = &telebot.ReplyMarkup{ResizeKeyboard: true, ForceReply: true}
 
 	// Reply buttons.
-	btnSendVid  = menu.Text("Надіслати відео і опис")
-	btnSendImg  = menu.Text("Надіслати фото і опис")
-	btnComplain = menu.Text("Поскаржитися на контент")
-	btnRequest  = menu.Text("Що цікаво знати більше про війну?")
+	btnSendVid  = menu.Text("Прислати відео")
+	btnSendImg  = menu.Text("Прислати фото")
+	btnFeedback = menu.Text("Прислати ідею, пропозицію чи скаргу")
 )
 
 func init() {
@@ -43,21 +42,16 @@ func main() {
 
 	initMenu()
 
-	b.Handle("/start", func(c telebot.Context) error {
-		return c.Send("Вітаю!", menu)
-	}, checkIsAdminChat)
+	b.Handle("/start", handleStart, checkIsAdminChat)
 
 	b.Handle(&btnSendVid, func(c telebot.Context) error {
-		return buttonHandler(c, "video", "Додайте відео.")
+		return buttonHandler(c, "video", "Завантаж відео")
 	}, checkIsAdminChat)
 	b.Handle(&btnSendImg, func(c telebot.Context) error {
-		return buttonHandler(c, "image", "Додайте зображення.")
+		return buttonHandler(c, "image", "Завантаж фото")
 	}, checkIsAdminChat)
-	b.Handle(&btnComplain, func(c telebot.Context) error {
-		return buttonHandler(c, "complain", "Додайте скаргу.")
-	}, checkIsAdminChat)
-	b.Handle(&btnRequest, func(c telebot.Context) error {
-		return buttonHandler(c, "suggestion", "Додайте ваше побажання.")
+	b.Handle(&btnFeedback, func(c telebot.Context) error {
+		return buttonHandler(c, "feedback", "Додайте ідею, пропозицію чи скаргу.")
 	}, checkIsAdminChat)
 
 	b.Handle(telebot.OnText, handleText, checkIsAdminChat, checkSession)
@@ -72,7 +66,6 @@ func initMenu() {
 	menu.Reply(
 		menu.Row(btnSendVid),
 		menu.Row(btnSendImg),
-		menu.Row(btnComplain),
-		menu.Row(btnRequest),
+		menu.Row(btnFeedback),
 	)
 }

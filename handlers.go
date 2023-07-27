@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"gopkg.in/telebot.v3"
 )
@@ -16,6 +17,9 @@ type AdminMsg struct {
 	chatId int64
 }
 
+type AdminLib struct {
+}
+
 func (m AdminMsg) MessageSig() (messageID string, chatID int64) {
 	return m.msgId, m.chatId
 }
@@ -25,9 +29,8 @@ func (r AdminChat) Recipient() string {
 }
 
 func buttonHandler(c telebot.Context, nStep string, msg string) error {
-	session := NewSession()
+	session := NewSession(c.Chat().ID)
 	session.setNextStep(nStep)
-	setSession(c.Chat().ID, session)
 
 	return c.Send(msg)
 }
@@ -41,26 +44,15 @@ func handleText(c telebot.Context) error {
 	switch session.nextStep {
 	case "description":
 		session.addData(c.Message().ID)
-		session.setNextStep("date")
-		setSession(sesId, session)
-		return c.Send("Додайте дату коли було зроблено фото/відео.")
-	case "date":
-		session.addData(c.Message().ID)
 		forwardSessionDataToAdmin(session.data, c.Chat().ID)
 		terminateSession(c.Chat().ID)
-		return c.Send("Данні відправлено.")
-	case "complain":
+		return c.Send("Дякую! Я все отримав. Щиро твій, бот Нацгвардії.")
+	case "feedback":
 		session.addData(c.Message().ID)
-		sendTextToAdmin("Скарга!")
+		sendTextToAdmin("Відгук!")
 		forwardSessionDataToAdmin(session.data, c.Chat().ID)
 		terminateSession(c.Chat().ID)
-		return c.Send("Данні відправлено.")
-	case "suggestion":
-		session.addData(c.Message().ID)
-		sendTextToAdmin("Побажання.")
-		forwardSessionDataToAdmin(session.data, c.Chat().ID)
-		terminateSession(c.Chat().ID)
-		return c.Send("Данні відправлено.")
+		return c.Send("Дякую! Я все отримав. Щиро твій, бот Нацгвардії.")
 	}
 
 	return nil
@@ -75,8 +67,7 @@ func handleVid(c telebot.Context) error {
 	if session.nextStep == "video" {
 		session.addData(c.Message().ID)
 		session.setNextStep("description")
-		setSession(sesId, session)
-		return c.Send("Надайте короткий опис.")
+		c.Send("Додай дату, коли це було і короткий опис подій.")
 	}
 
 	return nil
@@ -90,12 +81,20 @@ func handleImg(c telebot.Context) error {
 
 	if session.nextStep == "image" {
 		session.addData(c.Message().ID)
-		session.setNextStep("description")
-		setSession(sesId, session)
-		return c.Send("Надайте короткий опис.")
+
+		if !session.waiting {
+			session.waiting = true
+			time.Sleep(5 * time.Second)
+			session.setNextStep("description")
+			c.Send("Додай дату, коли це було і короткий опис подій.")
+		}
 	}
 
 	return nil
+}
+
+func handleStart(c telebot.Context) error {
+	return c.Send("Вітаю!", menu)
 }
 
 func sendTextToAdmin(text string) {
@@ -108,12 +107,13 @@ func forwardSessionDataToAdmin(data []int, chatId int64) {
 	recipient := getAdminRecipient()
 
 	for _, msgId := range data {
+
 		admMsg := AdminMsg{
 			msgId:  fmt.Sprint(msgId),
 			chatId: chatId,
 		}
 
-		b.Copy(recipient, admMsg)
+		b.Forward(recipient, admMsg)
 	}
 }
 

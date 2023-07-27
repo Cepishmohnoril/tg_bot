@@ -5,21 +5,24 @@ import (
 )
 
 type session struct {
-	nextStep  string
 	data      []int
+	nextStep  string
+	waiting   bool
 	createdAt time.Time
 }
 
-func NewSession() session {
-	return session{
+func NewSession(sesId int64) *session {
+	storage[sesId] = &session{
 		createdAt: time.Now(),
+		waiting:   false,
 	}
+	return storage[sesId]
 }
 
-var storage map[int64]session
+var storage map[int64]*session
 
 func initSessionStorage() {
-	storage = make(map[int64]session)
+	storage = make(map[int64]*session)
 
 	go cleanerLoop()
 }
@@ -42,11 +45,7 @@ func cleanStorage() {
 	}
 }
 
-func setSession(sesId int64, ses session) {
-	storage[sesId] = ses
-}
-
-func getSession(sesId int64) session {
+func getSession(sesId int64) *session {
 	return storage[sesId]
 }
 
